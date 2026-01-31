@@ -29,7 +29,7 @@ public class InteracableDetector : MonoBehaviour
     /// </summary>
     private bool m_InteractableUnreachableOnce = false;
 
-    private IInteractable m_CurrentInteractable;
+    private AInteractable m_CurrentInteractable;
 
     #endregion
 
@@ -37,7 +37,7 @@ public class InteracableDetector : MonoBehaviour
     /// <summary>
     /// her farklý IInteractable sýnýfýndan obje bulunduðunda bu event tetiklenir.
     /// </summary>
-    public static event Action<IInteractable> OnNewInteractableDetected;
+    public static event Action<AInteractable> OnNewInteractableDetected;
 
     /// <summary>
     /// bulunan IInteractable objesi çok uzaksa tetiklenir. 
@@ -115,7 +115,8 @@ public class InteracableDetector : MonoBehaviour
 
     private void HandleClosestHit(RaycastHit hit)
     {
-        var interactable = hit.transform.GetComponentInParent<IInteractable>();
+        // collisionalar genelde child objede olacaklarý için parent'a bakýlýr.
+        var interactable = hit.transform.GetComponentInParent<AInteractable>();
         if (interactable != null)
         {
             if(hit.distance <= MaxInteractionDistance)

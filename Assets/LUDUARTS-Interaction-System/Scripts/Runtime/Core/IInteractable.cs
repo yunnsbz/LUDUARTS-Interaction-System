@@ -1,11 +1,6 @@
 using UnityEngine;
 
-public enum InteractionTypes
-{
-    Instant = 0,
-    Hold = 1,
-    Toggle = 2,
-}
+
 
 public interface IInteractable
 {
