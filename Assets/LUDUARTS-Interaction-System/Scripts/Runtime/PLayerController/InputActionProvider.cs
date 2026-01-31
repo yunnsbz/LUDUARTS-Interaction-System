@@ -13,14 +13,14 @@ public class InputActionProvider : MonoBehaviour
 {
     [SerializeField] private KeybindTarget m_Target;
 
-    public static InputActionProvider instance;
+    public static InputActionProvider Instance;
 
     public static PlayerInputActions Inputs;
     public InputAction InteractionAction => m_Target.GetAction();
 
     private void Awake()
     {
-        instance = this;
+        Instance = this;
         Inputs = new PlayerInputActions();
     }
 }

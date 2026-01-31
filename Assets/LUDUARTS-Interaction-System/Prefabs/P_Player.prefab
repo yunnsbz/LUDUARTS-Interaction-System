@@ -300,13 +300,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 779170e7c450a9942bb0feb5661a2e68, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  cameraTransform: {fileID: 2055130532705765146}
-  moveSpeed: 6
-  smoothTime: 0.1
-  gravity: -20
-  mouseSensitivity: 0.1
-  lookSmoothTime: 0.05
-  maxLookAngle: 80
+  m_CameraTransform: {fileID: 2055130532705765146}
+  m_Controller: {fileID: 8857270751300030239}
+  m_MoveSpeed: 6
+  m_SmoothTime: 0.1
+  m_Gravity: -20
+  m_MouseSensitivity: 0.1
+  m_LookSmoothTime: 0.05
+  m_MaxLookAngle: 80
 --- !u!114 &378588196787055286
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -334,7 +335,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 62b4380e58a209e48a7cda3738120bd8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  MaxInteractionDistance: 2
+  m_MaxInteractionDistance: 3
   m_LayerMask:
     serializedVersion: 2
     m_Bits: 8

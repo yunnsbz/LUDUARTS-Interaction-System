@@ -1,38 +1,48 @@
 using UnityEngine;
 
+/// <summary>
+/// CharacterController kullanan, WASD ve mouse ile kontrol edilen bir FPS oyuncu kontrolcüsü.
+/// Smooth hareket ve smooth kamera dönüþü içerir.
+/// </summary>
 public class PlayerController : MonoBehaviour
 {
+    #region Fields
+
     [Header("References")]
-    public Transform cameraTransform;
-    private CharacterController controller;
-    private PlayerInputActions input;
+    [SerializeField] private Transform m_CameraTransform;
+    [SerializeField] private CharacterController m_Controller;
+    [SerializeField] private PlayerInputActions m_Input;
 
     [Header("Movement")]
-    public float moveSpeed = 6f;
-    public float smoothTime = 0.1f;
-    public float gravity = -20f;
+    [SerializeField] private float m_MoveSpeed = 6f;
+    [SerializeField] private float m_SmoothTime = 0.1f;
+    [SerializeField] private float m_Gravity = -20f;
 
     [Header("Mouse Look")]
-    public float mouseSensitivity = 15f;
-    public float lookSmoothTime = 0.05f;
-    public float maxLookAngle = 80f;
+    [SerializeField] private float m_MouseSensitivity = 15f;
+    [SerializeField] private float m_LookSmoothTime = 0.05f;
+    [SerializeField] private float m_MaxLookAngle = 80f;
 
-    Vector2 moveInput;
-    Vector2 lookInput;
+    private Vector2 m_MoveInput;
+    private Vector2 m_LookInput;
 
-    Vector2 currentMoveVelocity;
-    Vector2 currentLookVelocity;
+    private Vector2 m_CurrentMoveVelocity;
+    private Vector2 m_CurrentLookVelocity;
 
-    float verticalVelocity;
-    float cameraPitch;
+    private float m_VerticalVelocity;
+    private float m_CameraPitch;
 
-    Vector2 smoothMove;
-    Vector2 smoothLook;
+    private Vector2 m_SmoothMove;
+    private Vector2 m_SmoothLook;
 
-    void Awake()
+    #endregion
+
+    #region Unity Methods
+
+    private void Awake()
     {
-        controller = GetComponent<CharacterController>();
-        input = InputActionProvider.Inputs;
+        m_Controller = GetComponent<CharacterController>();
+        m_Input = InputActionProvider.Inputs;
     }
 
     private void Start()
@@ -41,67 +51,113 @@ public class PlayerController : MonoBehaviour
         Cursor.visible = false;
     }
 
-    void OnEnable()
+    private void OnEnable()
     {
-        input.Player.Enable();
+        m_Input.Player.Enable();
 
-        input.Player.Move.performed += ctx => moveInput = ctx.ReadValue<Vector2>();
-        input.Player.Move.canceled += ctx => moveInput = Vector2.zero;
+        m_Input.Player.Move.performed += OnMovePerformed;
+        m_Input.Player.Move.canceled += OnMoveCanceled;
 
-        input.Player.Look.performed += ctx => lookInput = ctx.ReadValue<Vector2>();
-        input.Player.Look.canceled += ctx => lookInput = Vector2.zero;
+        m_Input.Player.Look.performed += OnLookPerformed;
+        m_Input.Player.Look.canceled += OnLookCanceled;
     }
 
-    void OnDisable()
+    private void OnDisable()
     {
-        input.Player.Disable();
+        m_Input.Player.Disable();
+
+        m_Input.Player.Move.performed -= OnMovePerformed;
+        m_Input.Player.Move.canceled -= OnMoveCanceled;
+
+        m_Input.Player.Look.performed -= OnLookPerformed;
+        m_Input.Player.Look.canceled -= OnLookCanceled;
     }
 
-    void Update()
+    private void Update()
     {
         HandleLook();
         HandleMovement();
     }
 
-    void HandleMovement()
+    #endregion
+
+    #region Input Callbacks
+
+    private void OnMovePerformed(UnityEngine.InputSystem.InputAction.CallbackContext context)
     {
-        smoothMove = Vector2.SmoothDamp(
-            smoothMove,
-            moveInput,
-            ref currentMoveVelocity,
-            smoothTime
-        );
-
-        Vector3 move = transform.right * smoothMove.x +
-                       transform.forward * smoothMove.y;
-
-        if (controller.isGrounded && verticalVelocity < 0)
-            verticalVelocity = -2f;
-
-        verticalVelocity += gravity * Time.deltaTime;
-
-        Vector3 velocity = move * moveSpeed;
-        velocity.y = verticalVelocity;
-
-        controller.Move(velocity * Time.deltaTime);
+        m_MoveInput = context.ReadValue<Vector2>();
     }
 
-    void HandleLook()
+    private void OnMoveCanceled(UnityEngine.InputSystem.InputAction.CallbackContext context)
     {
-        smoothLook = Vector2.SmoothDamp(
-            smoothLook,
-            lookInput,
-            ref currentLookVelocity,
-            lookSmoothTime
-        );
+        m_MoveInput = Vector2.zero;
+    }
 
-        float mouseX = smoothLook.x * mouseSensitivity;
-        float mouseY = smoothLook.y * mouseSensitivity;
+    private void OnLookPerformed(UnityEngine.InputSystem.InputAction.CallbackContext context)
+    {
+        m_LookInput = context.ReadValue<Vector2>();
+    }
 
-        cameraPitch -= mouseY;
-        cameraPitch = Mathf.Clamp(cameraPitch, -maxLookAngle, maxLookAngle);
+    private void OnLookCanceled(UnityEngine.InputSystem.InputAction.CallbackContext context)
+    {
+        m_LookInput = Vector2.zero;
+    }
 
-        cameraTransform.localRotation = Quaternion.Euler(cameraPitch, 0, 0);
+    #endregion
+
+    #region Movement
+
+    private void HandleMovement()
+    {
+        m_SmoothMove = Vector2.SmoothDamp(
+            m_SmoothMove,
+            m_MoveInput,
+            ref m_CurrentMoveVelocity,
+            m_SmoothTime);
+
+        Vector3 moveDirection =
+            transform.right * m_SmoothMove.x +
+            transform.forward * m_SmoothMove.y;
+
+        if (m_Controller.isGrounded && m_VerticalVelocity < 0f)
+        {
+            m_VerticalVelocity = -2f;
+        }
+
+        m_VerticalVelocity += m_Gravity * Time.deltaTime;
+
+        Vector3 velocity = moveDirection * m_MoveSpeed;
+        velocity.y = m_VerticalVelocity;
+
+        m_Controller.Move(velocity * Time.deltaTime);
+    }
+
+    #endregion
+
+    #region Look
+
+    private void HandleLook()
+    {
+        m_SmoothLook = Vector2.SmoothDamp(
+            m_SmoothLook,
+            m_LookInput,
+            ref m_CurrentLookVelocity,
+            m_LookSmoothTime);
+
+        float mouseX = m_SmoothLook.x * m_MouseSensitivity;
+        float mouseY = m_SmoothLook.y * m_MouseSensitivity;
+
+        m_CameraPitch -= mouseY;
+        m_CameraPitch = Mathf.Clamp(
+            m_CameraPitch,
+            -m_MaxLookAngle,
+            m_MaxLookAngle);
+
+        m_CameraTransform.localRotation =
+            Quaternion.Euler(m_CameraPitch, 0f, 0f);
+
         transform.Rotate(Vector3.up * mouseX);
     }
+
+    #endregion
 }

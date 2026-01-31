@@ -1,50 +1,96 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
+/// <summary>
+/// Oyuncunun envanter HUD'ýný yöneten sýnýf.
+/// Envanter açma/kapama, UI yenileme ve item spawn iþlemlerini yönetir.
+/// </summary>
 public class HUD_InventoryHandler : MonoBehaviour
 {
+    #region Fields
+
+    [Header("References")]
     [SerializeField] private Canvas m_Canvas;
     [SerializeField] private PlayerInputActions m_Inputs;
     [SerializeField] private GameObject m_InventoryItemPrefab;
     [SerializeField] private Transform m_InventoryContainer;
 
-    // UI tarafýndaki aktif itemler
+    /// <summary>
+    /// UI tarafýndaki aktif itemler.
+    /// </summary>
     private readonly List<HUD_InventoryItem> m_SpawnedItems = new();
+
+    #endregion
+
+    #region Unity Methods
 
     private void Awake()
     {
         m_Inputs = InputActionProvider.Inputs;
-
-        
-    }
-
-    private void InventoryToggle_started(UnityEngine.InputSystem.InputAction.CallbackContext obj)
-    {
-        if (m_Canvas.enabled)
-        {
-            CloseInventory();
-        }
-        else
-        {
-            OpenInventory();
-        }
     }
 
     private void OnEnable()
     {
-        Inventory.Instance.OnAddItem += OnInventoryChange;
-        Inventory.Instance.OnRemoveItem += OnInventoryChange;
-        m_Inputs.Player.InventoryToggle.started += InventoryToggle_started;
-
+        SubscribeEvents();
         Refresh();
     }
-
 
     private void Start()
     {
         m_Canvas.enabled = false;
     }
 
+    private void OnDisable()
+    {
+        UnsubscribeEvents();
+    }
+
+    #endregion
+
+    #region Event Subscriptions
+
+    private void SubscribeEvents()
+    {
+        Inventory.Instance.OnAddItem += OnInventoryChange;
+        Inventory.Instance.OnRemoveItem += OnInventoryChange;
+
+        m_Inputs.Player.InventoryToggle.started += OnInventoryToggleStarted;
+    }
+
+    private void UnsubscribeEvents()
+    {
+        if (Inventory.Instance != null)
+        {
+            Inventory.Instance.OnAddItem -= OnInventoryChange;
+            Inventory.Instance.OnRemoveItem -= OnInventoryChange;
+        }
+
+        m_Inputs.Player.InventoryToggle.started -= OnInventoryToggleStarted;
+    }
+
+    #endregion
+
+    #region Input Handling
+
+    private void OnInventoryToggleStarted(InputAction.CallbackContext context)
+    {
+        if (m_Canvas.enabled)
+        {
+            CloseInventory();
+            return;
+        }
+
+        OpenInventory();
+    }
+
+    #endregion
+
+    #region Inventory UI
+
+    /// <summary>
+    /// Envanter UI'ýný açar ve imleci serbest býrakýr.
+    /// </summary>
     public void OpenInventory()
     {
         m_Canvas.enabled = true;
@@ -55,7 +101,9 @@ public class HUD_InventoryHandler : MonoBehaviour
         Refresh();
     }
 
-
+    /// <summary>
+    /// Envanter UI'ýný kapatýr ve imleci kilitler.
+    /// </summary>
     public void CloseInventory()
     {
         m_Canvas.enabled = false;
@@ -64,13 +112,17 @@ public class HUD_InventoryHandler : MonoBehaviour
         Cursor.visible = false;
     }
 
-
-    private void OnInventoryChange(IItem obj)
+    /// <summary>
+    /// Envanter deðiþtiðinde tetiklenir ve UI'ý yeniden çizer.
+    /// </summary>
+    private void OnInventoryChange(IItem item)
     {
         Refresh();
     }
 
-    // Envanteri tamamen yeniden çizer
+    /// <summary>
+    /// Envanteri tamamen yeniden çizer.
+    /// </summary>
     public void Refresh()
     {
         ClearUI();
@@ -83,26 +135,39 @@ public class HUD_InventoryHandler : MonoBehaviour
         }
     }
 
-    // Tek bir item UI ekler
+    /// <summary>
+    /// Tek bir item için UI elemaný oluþturur.
+    /// </summary>
     public void SpawnItem(IItem item)
     {
-        GameObject go = Instantiate(m_InventoryItemPrefab, m_InventoryContainer);
-        HUD_InventoryItem uiItem = go.GetComponent<HUD_InventoryItem>();
+        GameObject instance = Instantiate(
+            m_InventoryItemPrefab,
+            m_InventoryContainer);
+
+        HUD_InventoryItem uiItem =
+            instance.GetComponent<HUD_InventoryItem>();
 
         uiItem.UpdateItem(item);
         m_SpawnedItems.Add(uiItem);
     }
 
-    // UI temizler
+    /// <summary>
+    /// Tüm UI item'larýný temizler.
+    /// </summary>
     private void ClearUI()
     {
         foreach (var item in m_SpawnedItems)
         {
-            if (item != null)
-                DestroyImmediate(item.gameObject);
+            if (item == null)
+            {
+                continue;
+            }
+
+            DestroyImmediate(item.gameObject);
         }
 
         m_SpawnedItems.Clear();
     }
 
+    #endregion
 }

@@ -1,50 +1,86 @@
-using System.Collections;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
 /// <summary>
-/// bir etkileþim butonu kullanarak oyuncunun detector tarafýndan belirlenen IInteractable objesi ile etkileþime geçmesini saðlar.
+/// Bir etkileþim butonu kullanarak, detector tarafýndan belirlenen
+/// <see cref="AInteractable"/> objesi ile oyuncunun etkileþime geçmesini saðlar.
 /// </summary>
 public class PlayerInteractor : MonoBehaviour
 {
+    #region Fields
+
     private InputAction m_InteractAction;
     private AInteractable m_CurrentInteractable;
 
+    #endregion
+
+    #region Unity Methods
+
     private void Awake()
     {
-        m_InteractAction = InputActionProvider.instance.InteractionAction;
+        m_InteractAction = InputActionProvider.Instance.InteractionAction;
     }
 
     private void OnEnable()
     {
-        InteracableDetector.OnNewInteractableDetected += OnNewInteractableDetected;
-        InteracableDetector.OnInteractableNotDetected += OnInteractableNotDetected;
-        InteracableDetector.OnNewInteractableUnreachable += OnInteractableNotDetected;
-
-        m_InteractAction.performed += InteractStarted;
+        SubscribeEvents();
     }
 
-    private void OnInteractableNotDetected()
+    private void OnDisable()
     {
-        if (m_CurrentInteractable != null) { 
-            m_CurrentInteractable = null;
-        }
+        UnsubscribeEvents();
     }
+
+    #endregion
+
+    #region Event Subscriptions
+
+    private void SubscribeEvents()
+    {
+        InteractableDetector.OnNewInteractableDetected += OnNewInteractableDetected;
+        InteractableDetector.OnInteractableNotDetected += OnInteractableNotDetected;
+        InteractableDetector.OnNewInteractableUnreachable += OnInteractableNotDetected;
+
+        m_InteractAction.performed += OnInteractPerformed;
+    }
+
+    private void UnsubscribeEvents()
+    {
+        InteractableDetector.OnNewInteractableDetected -= OnNewInteractableDetected;
+        InteractableDetector.OnInteractableNotDetected -= OnInteractableNotDetected;
+        InteractableDetector.OnNewInteractableUnreachable -= OnInteractableNotDetected;
+
+        m_InteractAction.performed -= OnInteractPerformed;
+    }
+
+    #endregion
+
+    #region Detector Callbacks
 
     private void OnNewInteractableDetected(AInteractable interactable)
     {
         m_CurrentInteractable = interactable;
     }
 
-    private void InteractStarted(InputAction.CallbackContext ctx)
+    private void OnInteractableNotDetected()
+    {
+        m_CurrentInteractable = null;
+    }
+
+    #endregion
+
+    #region Input Handling
+
+    private void OnInteractPerformed(InputAction.CallbackContext context)
     {
         if (m_CurrentInteractable != null)
         {
             m_CurrentInteractable.StartInteraction();
+            return;
         }
-        else
-        {
-            Debug.Log("no interaction object found to interact with");
-        }
+
+        Debug.Log("No interaction object found to interact with.");
     }
+
+    #endregion
 }

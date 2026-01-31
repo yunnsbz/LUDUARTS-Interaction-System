@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Unity.Mathematics;
 using Unity.VisualScripting;
 using UnityEngine;
 
@@ -43,7 +44,7 @@ public class Inventory : MonoBehaviour
     {
         if (m_Items.Remove(item))
         {
-            item.GetGameObject().transform.localPosition = new Vector3(0, 0, 0);
+            item.GetGameObject().transform.position = transform.position + new Vector3( UnityEngine.Random.Range(-1f,1f),0, UnityEngine.Random.Range(-1f, 1f));
 
             Debug.Log($"Removed: {item.DisplayName}");
             OnRemoveItem?.Invoke(item);

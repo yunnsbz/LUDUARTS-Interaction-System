@@ -2,53 +2,100 @@ using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
+/// <summary>
+/// Hold (basýlý tutma) tipi etkileþimler için temel soyut sýnýf.
+/// Belirlenen süre boyunca buton basýlý tutulduðunda etkileþim tamamlanýr.
+/// </summary>
 public abstract class AHoldInteractable : AInteractable
 {
-    [SerializeField] float m_HoldDuration = 2f;
+    #region Fields
 
-    private bool m_TimerActive = false;
+    [Header("Hold Settings")]
+    [SerializeField] private float m_HoldDuration = 2f;
 
+    private bool m_TimerActive;
     private float m_Timer;
-    public override InteractionTypes InteractionType => InteractionTypes.Hold;
 
-    
-    // needed to cancel hold action
+    /// <summary>
+    /// Hold etkileþimini iptal edebilmek için kullanýlan input action referansý.
+    /// </summary>
     private InputAction m_InteractAction;
 
-    public static event Action<AHoldInteractable> OnHoldStarted;
-    public static event Action<AHoldInteractable> OnHoldCompleted;
-    public static event Action<AHoldInteractable> OnHoldCanceled;
-    public static event Action<float> OnHoldProgress; // 0..1
+    #endregion
 
+    #region Events
+
+    /// <summary>
+    /// Hold baþladýðýnda tetiklenir.
+    /// </summary>
+    public static event Action<AHoldInteractable> OnHoldStarted;
+
+    /// <summary>
+    /// Hold baþarýyla tamamlandýðýnda tetiklenir.
+    /// </summary>
+    public static event Action<AHoldInteractable> OnHoldCompleted;
+
+    /// <summary>
+    /// Hold herhangi bir nedenle iptal edildiðinde tetiklenir.
+    /// </summary>
+    public static event Action<AHoldInteractable> OnHoldCanceled;
+
+    /// <summary>
+    /// Hold ilerleme durumu (0..1 arasý) her frame güncellenir.
+    /// </summary>
+    public static event Action<float> OnHoldProgress;
+
+    #endregion
+
+    #region Properties
+
+    /// <summary>
+    /// Etkileþim tipi.
+    /// </summary>
+    public override InteractionTypes InteractionType => InteractionTypes.Hold;
+
+    #endregion
+
+    #region Unity Methods
 
     protected virtual void Awake()
     {
-        m_InteractAction = InputActionProvider.instance.InteractionAction;
+        m_InteractAction = InputActionProvider.Instance.InteractionAction;
     }
 
     protected virtual void OnEnable()
     {
-        InteracableDetector.OnInteractableNotDetected += OnInteractionCanceled;
+        InteractableDetector.OnInteractableNotDetected += OnInteractionCanceled;
+        m_InteractAction.canceled += OnInteractActionCanceled;
+    }
 
-        m_InteractAction.canceled += InteractActionCanceled;
+    protected virtual void OnDisable()
+    {
+        InteractableDetector.OnInteractableNotDetected -= OnInteractionCanceled;
+        m_InteractAction.canceled -= OnInteractActionCanceled;
     }
 
     protected virtual void Update()
     {
         if (!m_TimerActive)
+        {
             return;
+        }
 
         m_Timer += Time.deltaTime;
 
         if (m_Timer >= m_HoldDuration)
         {
-            StopTimer();
-            OnHoldCompleteCore();
-            OnHoldCompleted?.Invoke(this);
+            CompleteHold();
+            return;
         }
-        OnHoldProgress?.Invoke(m_Timer/m_HoldDuration);
+
+        OnHoldProgress?.Invoke(m_Timer / m_HoldDuration);
     }
 
+    #endregion
+
+    #region Interaction Core
 
     protected sealed override void OnInteractStartCore()
     {
@@ -58,62 +105,83 @@ public abstract class AHoldInteractable : AInteractable
     }
 
     /// <summary>
-    /// hold etkileþimi tam baþlayýnca yapýlabilecek iþlemler buraya eklenir. gerekmiyorsa boþ býrakýlsýn.
+    /// Hold etkileþimi tam baþladýðýnda yapýlacak iþlemler.
+    /// Gerekmiyorsa boþ býrakýlabilir.
     /// </summary>
     protected abstract void OnHoldInteractionStartCore();
 
     /// <summary>
-    /// aksiyon bir nedenden dolayý iptal olursa buradaki iþlemler uygulanýr.
+    /// Hold etkileþimi iptal edildiðinde yapýlacak iþlemler.
     /// </summary>
     protected abstract void OnHoldInteractionCanceledCore();
 
     /// <summary>
-    /// aksiyon süre sonuna gelince yapýlacaklar buraya yazýlýr.
+    /// Hold etkileþimi baþarýyla tamamlandýðýnda yapýlacak iþlemler.
     /// </summary>
     protected abstract void OnHoldCompleteCore();
 
+    #endregion
 
-    /// <summary>
-    /// Timer'ý baþlatmak için.
-    /// </summary>
+    #region Timer Logic
+
     private void StartTimer()
     {
         m_Timer = 0f;
         m_TimerActive = true;
-        Debug.Log("timer started");
+        Debug.Log("Hold timer started.");
     }
 
     private void StopTimer()
     {
-        if (m_TimerActive)
+        if (!m_TimerActive)
         {
-            m_TimerActive = false;
-            m_Timer = 0f;
-            Debug.Log("timer stoped");
+            return;
         }
+
+        m_TimerActive = false;
+        m_Timer = 0f;
+        Debug.Log("Hold timer stopped.");
     }
 
-    /// <summary>
-    /// oyuncu hold butonunu býrakýrsa bu etkileþim iptal olur.
-    /// </summary>
-    /// <param name="obj"></param>
-    private void InteractActionCanceled(InputAction.CallbackContext obj)
+    private void CompleteHold()
     {
-        if (m_TimerActive) { 
-            StopTimer();
-            OnHoldCanceled?.Invoke(this);
-        }
+        StopTimer();
+        OnHoldCompleteCore();
+        OnHoldCompleted?.Invoke(this);
+    }
+
+    #endregion
+
+    #region Cancellation
+
+    /// <summary>
+    /// Oyuncu hold butonunu býrakýrsa bu etkileþim iptal edilir.
+    /// </summary>
+    private void OnInteractActionCanceled(InputAction.CallbackContext context)
+    {
+        CancelHold();
     }
 
     /// <summary>
-    /// oyuncu baþka bir yere bakarsa da bu etkileþim iptal olur. etkileþimin burada da kalýcý olmasý için bir flag kullan.
+    /// Oyuncu baþka bir yere baktýðýnda (detector etkileþilebilir obje kaybettiðinde)
+    /// bu etkileþim iptal edilir.
     /// </summary>
     private void OnInteractionCanceled()
     {
-        if (m_TimerActive)
-        {
-            StopTimer();
-            OnHoldCanceled?.Invoke(this);
-        }
+        CancelHold();
     }
+
+    private void CancelHold()
+    {
+        if (!m_TimerActive)
+        {
+            return;
+        }
+
+        StopTimer();
+        OnHoldInteractionCanceledCore();
+        OnHoldCanceled?.Invoke(this);
+    }
+
+    #endregion
 }

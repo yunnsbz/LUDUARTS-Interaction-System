@@ -2,15 +2,40 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
+/// <summary>
+/// Etkileþim prompt UI'ýný yöneten sýnýf.
+/// Detector ve interactable event'lerini dinleyerek ekrandaki metni günceller.
+/// </summary>
 public class HUD_InteractionPromptHandler : MonoBehaviour
 {
+    #region Fields
+
+    [Header("References")]
     [SerializeField] private TMP_Text m_InteractionPrompt;
+
+    #endregion
+
+    #region Unity Methods
 
     private void Awake()
     {
-        InteracableDetector.OnNewInteractableDetected += UpdateTextWithInteractable;
-        InteracableDetector.OnInteractableNotDetected += OnInteractableNotDetected;
-        InteracableDetector.OnNewInteractableUnreachable += OnNewInteractableUnreachable;
+        SubscribeEvents();
+    }
+
+    private void OnDisable()
+    {
+        UnsubscribeEvents();
+    }
+
+    #endregion
+
+    #region Event Subscriptions
+
+    private void SubscribeEvents()
+    {
+        InteractableDetector.OnNewInteractableDetected += UpdateTextWithInteractable;
+        InteractableDetector.OnInteractableNotDetected += OnInteractableNotDetected;
+        InteractableDetector.OnNewInteractableUnreachable += OnNewInteractableUnreachable;
 
         AToggleInteractable.OnToggleActivated += UpdateTextWithInteractable;
         AToggleInteractable.OnToggleReverted += UpdateTextWithInteractable;
@@ -20,9 +45,27 @@ public class HUD_InteractionPromptHandler : MonoBehaviour
         AHoldInteractable.OnHoldStarted += RemoveTextForInteractable;
     }
 
+    private void UnsubscribeEvents()
+    {
+        InteractableDetector.OnNewInteractableDetected -= UpdateTextWithInteractable;
+        InteractableDetector.OnInteractableNotDetected -= OnInteractableNotDetected;
+        InteractableDetector.OnNewInteractableUnreachable -= OnNewInteractableUnreachable;
+
+        AToggleInteractable.OnToggleActivated -= UpdateTextWithInteractable;
+        AToggleInteractable.OnToggleReverted -= UpdateTextWithInteractable;
+
+        AHoldInteractable.OnHoldCompleted -= RemoveTextForInteractable;
+        AHoldInteractable.OnHoldCanceled -= UpdateTextWithInteractable;
+        AHoldInteractable.OnHoldStarted -= RemoveTextForInteractable;
+    }
+
+    #endregion
+
+    #region Prompt Logic
+
     private void RemoveTextForInteractable(AInteractable interactable)
     {
-        m_InteractionPrompt.text = "";
+        m_InteractionPrompt.text = string.Empty;
     }
 
     private void OnNewInteractableUnreachable()
@@ -32,18 +75,29 @@ public class HUD_InteractionPromptHandler : MonoBehaviour
 
     private void OnInteractableNotDetected()
     {
-        m_InteractionPrompt.text = "";
+        m_InteractionPrompt.text = string.Empty;
     }
 
     private void UpdateTextWithInteractable(AInteractable interactable)
     {
+        string bindingDisplay =
+            InputActionProvider.Instance.InteractionAction.GetBindingDisplayString();
+
         m_InteractionPrompt.text = interactable.InteractionType switch
         {
-            InteractionTypes.Instant => "Tap " + InputActionProvider.instance.InteractionAction.GetBindingDisplayString() + " to " + interactable.InteractablePromptText,
-            InteractionTypes.Hold => "Hold " + InputActionProvider.instance.InteractionAction.GetBindingDisplayString() + " to " + interactable.InteractablePromptText,
-            InteractionTypes.Toggle => "Toggle " + InputActionProvider.instance.InteractionAction.GetBindingDisplayString() + " to " + interactable.InteractablePromptText,
-            _ => "Error occured for interaction prompt"
+            InteractionTypes.Instant =>
+                $"Tap {bindingDisplay} to {interactable.InteractablePromptText}",
 
+            InteractionTypes.Hold =>
+                $"Hold {bindingDisplay} to {interactable.InteractablePromptText}",
+
+            InteractionTypes.Toggle =>
+                $"Toggle {bindingDisplay} to {interactable.InteractablePromptText}",
+
+            _ =>
+                "Error occurred for interaction prompt"
         };
     }
+
+    #endregion
 }

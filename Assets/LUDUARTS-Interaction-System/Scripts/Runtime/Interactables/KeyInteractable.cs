@@ -17,8 +17,5 @@ public class KeyInteractable : AInteractable
     {
         // anahtarý alýp envantere yükleme
         Inventory.Instance.AddItem(m_KeyItem);
-
-
-
     }
 }
