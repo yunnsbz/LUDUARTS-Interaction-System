@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEngine;
 
+[DefaultExecutionOrder(-1)]
 public class Inventory : MonoBehaviour
 {
     [SerializeField] private int m_MaxSize = 20;

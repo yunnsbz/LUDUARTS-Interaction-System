@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class DoorInteractable : AToggleInteractable
 {
-
+    [SerializeField] private Animator m_Animator;
     [SerializeField] private bool m_IsLocked;
     [SerializeField] private KeyTypes m_RequiredKeyType;
 
@@ -58,6 +58,7 @@ public class DoorInteractable : AToggleInteractable
     {
         m_IsDoorOpen = true;
         SetPromptText("close door");
+        m_Animator.SetBool("IsOpen", true);
         Debug.Log("door opened");
     }
 
@@ -65,6 +66,7 @@ public class DoorInteractable : AToggleInteractable
     {
         m_IsDoorOpen = false;
         SetPromptText("open door");
+        m_Animator.SetBool("IsOpen", false);
         Debug.Log("door closed");
     }
 
