@@ -13,8 +13,10 @@ public enum InteractionTypes
 /// </summary>
 public abstract class AInteractable : MonoBehaviour
 {
+    [SerializeField] protected string m_PrompText = "use";
     [SerializeField] protected string m_InteractableName = "Interactable";
     public string InteractableName => m_InteractableName;
+    public string InteractablePromptText => m_PrompText;
 
     public virtual InteractionTypes InteractionType => InteractionTypes.Instant;
 
@@ -28,4 +30,9 @@ public abstract class AInteractable : MonoBehaviour
     }
 
     protected abstract void OnInteractStartCore();
+
+    protected void SetPromptText(string text)
+    {
+        m_PrompText = text;
+    }
 }

@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class ChestInteractable : HoldInteractable
+public class ChestInteractable : AHoldInteractable
 {
     private bool m_IsChestOpen = false;
 

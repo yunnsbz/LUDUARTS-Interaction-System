@@ -57,12 +57,14 @@ public class DoorInteractable : AToggleInteractable
     public void OpenDoor()
     {
         m_IsDoorOpen = true;
+        SetPromptText("close door");
         Debug.Log("door opened");
     }
 
     public void CloseDoor()
     {
         m_IsDoorOpen = false;
+        SetPromptText("open door");
         Debug.Log("door closed");
     }
 

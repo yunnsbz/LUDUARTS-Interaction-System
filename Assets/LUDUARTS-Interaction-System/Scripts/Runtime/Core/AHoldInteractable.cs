@@ -2,7 +2,7 @@ using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-public abstract class HoldInteractable : AInteractable
+public abstract class AHoldInteractable : AInteractable
 {
     [SerializeField] float m_HoldDuration = 2f;
 
@@ -15,9 +15,10 @@ public abstract class HoldInteractable : AInteractable
     // needed to cancel hold action
     private InputAction m_InteractAction;
 
-    public static event Action<HoldInteractable> OnHoldStarted;
-    public static event Action<HoldInteractable> OnHoldCompleted;
-    public static event Action<HoldInteractable> OnHoldCanceled;
+    public static event Action<AHoldInteractable> OnHoldStarted;
+    public static event Action<AHoldInteractable> OnHoldCompleted;
+    public static event Action<AHoldInteractable> OnHoldCanceled;
+    public static event Action<float> OnHoldProgress; // 0..1
 
 
     protected virtual void Awake()
@@ -41,13 +42,11 @@ public abstract class HoldInteractable : AInteractable
 
         if (m_Timer >= m_HoldDuration)
         {
-            m_TimerActive = false;
-            m_Timer = 0f;
-
             StopTimer();
             OnHoldCompleteCore();
             OnHoldCompleted?.Invoke(this);
         }
+        OnHoldProgress?.Invoke(m_Timer/m_HoldDuration);
     }
 
 
