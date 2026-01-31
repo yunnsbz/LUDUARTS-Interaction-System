@@ -7,12 +7,14 @@ using UnityEngine.InputSystem;
 public class PlayerInteractor : MonoBehaviour
 {
     private PlayerInputActions m_Input;
+    private InputAction m_InteractAction;
     private IInteractable m_CurrentInteractable;
 
 
     private void Awake()
     {
         m_Input = InputActionProvider.Inputs;
+        m_InteractAction = InputActionProvider.instance.InteractionAction;
     }
 
     private void OnEnable()
@@ -20,8 +22,8 @@ public class PlayerInteractor : MonoBehaviour
         InteracableDetector.OnNewInteractableDetected += OnNewInteractableDetected;
         InteracableDetector.OnInteractableNotDetected += OnInteractableNotDetected;
 
-        m_Input.Player.Interact.performed += InteractStarted;
-        m_Input.Player.Interact.canceled += InteractCanceled;
+        m_InteractAction.performed += InteractStarted;
+        m_InteractAction.canceled += InteractCanceled;
     }
 
     private void OnInteractableNotDetected()
