@@ -32,7 +32,7 @@ public class PlayerController : MonoBehaviour
     void Awake()
     {
         controller = GetComponent<CharacterController>();
-        input = new PlayerInputActions();
+        input = InputActionProvider.Inputs;
     }
 
     private void Start()
