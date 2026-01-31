@@ -14,11 +14,6 @@ public class KeyItem : MonoBehaviour, IItem
 
     public string DisplayName => m_KeyType + " Key";
 
-    void IItem.OnUse()
-    {
-        
-    }
-
     GameObject IItem.GetGameObject()
     {
         return gameObject; 

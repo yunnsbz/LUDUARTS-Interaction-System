@@ -52,14 +52,6 @@ public class Inventory : MonoBehaviour
         return false;
     }
 
-    public void UseItem(int index)
-    {
-        if (index < 0 || index >= m_Items.Count)
-            return;
-
-        m_Items[index].OnUse();
-    }
-
     public List<IItem> GetAllItems()
     {
         return m_Items;

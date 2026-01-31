@@ -3,6 +3,7 @@ using UnityEngine;
 
 public class ChestInteractable : AHoldInteractable
 {
+    [SerializeField] private Animator m_Animator;
     private bool m_IsChestOpen = false;
 
     private List<IItem> m_ChestItems;
@@ -33,10 +34,12 @@ public class ChestInteractable : AHoldInteractable
     public void OpenChest()
     {
         m_IsChestOpen = true;
+        m_Animator.SetBool("IsOpen", true);
     }
 
     public void CloseChest()
     {
         m_IsChestOpen = false;
+        m_Animator.SetBool("IsOpen", false);
     }
 }
