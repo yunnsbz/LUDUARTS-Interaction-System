@@ -66,6 +66,15 @@ public class KeybindTarget : MonoBehaviour
             Init();
         }
 
+        if(action.bindings.Count == 0)
+        {
+            bool initSuccess = InitWithoutLoad();
+            if (!initSuccess)
+            {
+                return;
+            }
+        }
+
         action.Disable();
 
         rebindOp = action
@@ -82,6 +91,19 @@ public class KeybindTarget : MonoBehaviour
             });
 
         rebindOp.Start();
+    }
+
+    private bool InitWithoutLoad()
+    {
+        if (inputActions == null)
+        {
+            Debug.LogWarning("inputActions is null");
+            return false;
+        }
+
+        var map = inputActions.FindActionMap(actionMapName, true);
+        action = map.FindAction(actionName, true);
+        return true;
     }
 
     public void CancelRebind()

@@ -2,19 +2,23 @@ using UnityEngine;
 
 public class KeyInteractable : AInteractable
 {
+    private IItem m_KeyItem;
+
+
     private void Awake()
     {
-        OnInteractionStarted += KeyInteractable_OnInteractionStarted;
-    }
-
-    private void KeyInteractable_OnInteractionStarted(AInteractable interactable)
-    {
-        if (interactable == this)
-            Debug.Log("interaction started for key (instant): " + interactable.InteractableName);
+        if(!TryGetComponent<IItem>(out m_KeyItem))
+        {
+            Debug.LogError("key interactable should have a key item component");
+        }
     }
 
     protected override void OnInteractStartCore()
     {
         // anahtarý alýp envantere yükleme
+        Inventory.Instance.AddItem(m_KeyItem);
+
+
+
     }
 }
